@@ -7,38 +7,16 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-  body {
-    background: #89bafa;  /* Deep black */
-    font-family: 'Inter', sans-serif;
-    color: #e5e5e5;
-  }
+    body {
+      background: linear-gradient(to bottom, #f0f4f8, #d9e2ec);
+      font-family: 'Inter', sans-serif;
+    }
+    .table-scroll { overflow-x: auto; }
+    .shiftBtn:hover { transform: translateY(-2px); transition: 0.2s; }
+    .card { transition: 0.3s; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
 
-  /* Cards */
-  .card {
-    background: #0f0f0f !important;
-    border: 1px solid #242424;
-    transition: 0.3s;
-    color: #e5e5e5 !important;
-  }
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 0 20px rgba(0, 122, 255, 0.25);
-  }
-
-  /* Shift buttons */
- .shiftBtn {
-    background: #fdf7f7 !important;
-    color: #f5f5f5 !important;
-    border: 3px solid #fff8f8;
-}
-
-  .shiftBtn:hover {
-    transform: translateY(-2px);
-    background: #1e1e1e !important;
-  }
-
-  /* Active shift style */
-  .activeShift {
+    .activeShift {
     background: #2563eb !important;
     color: white !important;
     transform: scale(1.02);
@@ -50,71 +28,32 @@
     opacity: 0.7;          /* Slight dim effect */
     transition: 0.3s;
 }
-  /* Colored shift backgrounds with GLASS effect */
-  .shift-sunday1 { background: rgba(255, 60, 60, 0.22) !important; backdrop-filter: blur(6px); }
-  .shift-sunday2 { background: rgba(255, 180, 40, 0.22) !important; backdrop-filter: blur(6px); }
-  .shift-sunday3 { background: rgba(255, 255, 40, 0.22) !important; backdrop-filter: blur(6px); }
 
-  .shift-nextweek1 { background: rgba(60, 255, 120, 0.22) !important; backdrop-filter: blur(6px); }
-  .shift-nextweek2 { background: rgba(40, 150, 255, 0.22) !important; backdrop-filter: blur(6px); }
-  .shift-nextweek3 { background: rgba(180, 80, 255, 0.22) !important; backdrop-filter: blur(6px); }
 
-  .shift-ot { background: rgba(255, 60, 255, 0.22) !important; backdrop-filter: blur(6px); }
-  .shift-vendor { background: rgba(60, 255, 255, 0.22) !important; backdrop-filter: blur(6px); }
+.shift-sunday1 { background: rgba(255, 180, 180, 0.35); backdrop-filter: blur(6px); }
+.shift-sunday2 { background: rgba(255, 220, 150, 0.35); backdrop-filter: blur(6px); }
+.shift-sunday3 { background: rgba(255, 255, 150, 0.35); backdrop-filter: blur(6px); }
 
-  /* Tables */
-  table {
-    color: #e5e5e5;
-  }
-  th {
-    background: #111 !important;
-    color: #bbb !important;
-  }
-  tr {
-    border-color: #222 !important;
-  }
+.shift-nextweek1 { background: rgba(180, 255, 200, 0.35); backdrop-filter: blur(6px); }
+.shift-nextweek2 { background: rgba(150, 210, 255, 0.35); backdrop-filter: blur(6px); }
+.shift-nextweek3 { background: rgba(200, 180, 255, 0.35); backdrop-filter: blur(6px); }
 
-  /* White box sections → dark box */
-  .bg-white {
-    background: #121212 !important;
-    color: #e5e5e5 !important;
-    border: 1px solid #1f1f1f !important;
-  }
+.shift-ot { background: rgba(255, 140, 255, 0.35); backdrop-filter: blur(6px); }
+.shift-vendor { background: rgba(180, 255, 255, 0.35); backdrop-filter: blur(6px); }
 
-  /* Modals */
-  #modal .bg-white,
-  #loginModal .bg-white {
-    background: #181818 !important;
-    border: 1px solid #333 !important;
-    color: #eee !important;
-  }
-  input {
-    background: #0f0f0f !important;
-    color: #e5e5e5 !important;
-    border: 1px solid #333 !important;
-  }
-
-  footer {
-    color: #777 !important;
-  }
-  button {
-    border: 1px solid white !important;
+.shift-selected {
+    border: 2px solid white;
+    scale: 1.02;
+    transition: 0.2s;
 }
-footer {
-    color: #777 !important;
-  }
 
-  /* ✅ Paste here — at the end */
-  button {
-      border: 2px solid white !important;
-  }
-</style>
+  </style>
 </head>
 <body class="min-h-screen text-gray-800">
   <div class="max-w-4xl mx-auto p-4">
 
     <!-- Header -->
-   <header class="flex items-center justify-between mb-6">
+     <header class="flex items-center justify-between mb-6">
 
   <!-- LOGO -->
   <img src="download (1).png" alt="Bajaj Auto Logo" class="h-12 w-auto">
@@ -131,7 +70,6 @@ footer {
   </div>
 
 </header>
-
 
     <!-- Shift Buttons -->
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
