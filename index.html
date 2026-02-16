@@ -22,7 +22,7 @@
             flex-direction: row;
         }
 
-        /* --- SIDEBAR (PC) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             width: var(--sidebar-width);
             background-color: var(--primary-color);
@@ -33,23 +33,9 @@
             z-index: 1000;
         }
 
-        .sidebar-header {
-            padding: 20px;
-            background: #1a252f;
-            text-align: center;
-            font-weight: bold;
-        }
-
+        .sidebar-header { padding: 20px; background: #1a252f; text-align: center; font-weight: bold; }
         .sidebar ul { list-style: none; padding: 0; margin: 0; }
-
-        .sidebar li {
-            padding: 15px 20px;
-            cursor: pointer;
-            border-bottom: 1px solid #34495e;
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
+        .sidebar li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #34495e; font-size: 13px; text-transform: uppercase; }
         .sidebar li.active { background-color: var(--accent-color); }
 
         /* --- MAIN CONTENT --- */
@@ -63,106 +49,58 @@
             width: 100%;
         }
 
-        .controls {
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 210mm;
-            text-align: center;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            width: 100%; /* Full width on mobile */
-            max-width: 300px;
-        }
-
+        .controls { margin-bottom: 15px; width: 100%; max-width: 210mm; text-align: center; }
+        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; width: 100%; max-width: 300px; }
         .btn-download { background-color: var(--accent-color); }
 
-        /* --- THE REPORT PAGE (Responsive) --- */
+        /* --- THE REPORT PAGE (A4 Optimization) --- */
         #report-content {
-            width: 100%;
-            max-width: 210mm; /* A4 Width */
+            width: 210mm;
             min-height: 297mm;
-            padding: 10mm; /* Reduced for mobile */
+            padding: 8mm;
             background: white;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            overflow-x: auto; /* Scroll table if too wide on tiny phones */
+            position: relative;
         }
 
-        h2 { font-size: 1.2rem; text-align: center; text-decoration: underline; }
+        h2 { font-size: 1.1rem; text-align: center; text-decoration: underline; margin: 5px 0 15px 0; }
 
-        table { width: 100%; border-collapse: collapse; min-width: 600px; /* Ensures table doesn't crush */ }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid black; padding: 4px 6px; font-size: 10px; word-wrap: break-word; }
 
-        th, td { border: 1px solid black; padding: 8px; font-size: 12px; }
+        input, select, textarea { width: 100%; border: none; font-size: 10px; background: transparent; outline: none; }
+        
+        .audit-row { height: 32px; }
 
-        input, select, textarea { width: 100%; border: none; font-size: 14px; }
-
-        /* --- MOBILE & TAB RESPONSIVENESS --- */
         @media (max-width: 1024px) {
             body { flex-direction: column; }
-            
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                max-height: 200px; /* Scrollable horizontal-ish menu */
-            }
-
-            .sidebar-header { padding: 10px; }
-
-            .sidebar ul {
-                display: flex;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-
-            .sidebar li {
-                display: inline-block;
-                padding: 10px 20px;
-                border-bottom: none;
-                border-right: 1px solid #34495e;
-            }
-
-            .main-content { margin-left: 0; padding: 5px; }
-
-            #report-content {
-                padding: 5mm;
-                margin-top: 10px;
-            }
+            .sidebar { width: 100%; height: auto; position: relative; max-height: 200px; }
+            .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; }
+            .sidebar li { display: inline-block; padding: 10px 20px; border-bottom: none; border-right: 1px solid #34495e; }
+            .main-content { margin-left: 0; padding: 5px; overflow-x: auto; }
+            #report-content { zoom: 0.45; transform-origin: top center; }
         }
 
         @media print {
             .sidebar, .controls { display: none !important; }
-            .main-content { margin-left: 0; }
-            #report-content { box-shadow: none; padding: 0; margin: 0; width: 100%; }
+            .main-content { margin-left: 0; padding: 0; }
+            #report-content { box-shadow: none; padding: 5mm; width: 100%; }
         }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-header">MENU (Swipe left/right)</div>
+        <div class="sidebar-header">MENU</div>
         <ul id="category-list">
             <li onclick="updateCategory('BAKERY PRODUCT', this)" class="active">Bakery</li>
             <li onclick="updateCategory('EGGS', this)">Eggs</li>
             <li onclick="updateCategory('FRUITS', this)">Fruits</li>
             <li onclick="updateCategory('MILK', this)">Milk</li>
             <li onclick="updateCategory('VEGETABLES', this)">Vegetables</li>
-            <li onclick="updateCategory('MEAT', this)">Meat</li>
-            <li onclick="updateCategory('POULTRY', this)">Poultry</li>
-            <li onclick="updateCategory('GROCERY', this)">Grocery</li>
-            <li onclick="updateCategory('DAIRY', this)">Dairy</li>
-            <li onclick="updateCategory('FROZEN', this)">Frozen</li>
-            <li onclick="updateCategory('BEVERAGES', this)">Beverages</li>
-            <li onclick="updateCategory('SPICES', this)">Spices</li>
-            <li onclick="updateCategory('GRAINS', this)">Grains</li>
-            <li onclick="updateCategory('CLEANING', this)">Cleaning</li>
-            <li onclick="updateCategory('OILS', this)">Oils</li>
+            <li onclick="showHousekeeping(this)">Housekeeping Audit</li>
+            <li onclick="showBiscuitAudit(this)">Weekly Biscuit Audit</li>
+            <li onclick="showGroceryAudit(this)">Incoming Grocery</li>
         </ul>
     </div>
 
@@ -173,40 +111,61 @@
 
         <div id="report-content">
             <h2 id="report-title">CHECK SHEET OF INCOMING BAKERY PRODUCT</h2>
-
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
-                <span><strong>DATE:</strong> <input type="date" style="width: 130px; border-bottom: 1px solid #000;"></span>
-            </div>
-
-            <div style="overflow-x: auto;">
+            <div id="dynamic-body">
+                <div style="margin-bottom: 8px;">
+                    <strong>DATE:</strong> <input type="date" style="width: 120px; border-bottom: 1px solid #000;">
+                </div>
                 <table>
                     <thead>
                         <tr>
-                            <th width="5%">SR.</th>
-                            <th width="45%" id="dynamic-column">NAME OF THE BAKERY PRODUCT</th>
-                            <th width="15%">QTY REC.</th>
-                            <th width="15%">QTY CHK.</th>
-                            <th width="20%">RATING</th>
+                            <th style="width: 8%;">SR.</th>
+                            <th style="width: 42%;">NAME OF THE BAKERY PRODUCT</th>
+                            <th style="width: 15%;">QTY REC.</th>
+                            <th style="width: 15%;">QTY CHK.</th>
+                            <th style="width: 20%;">RATING</th>
                         </tr>
                     </thead>
                     <tbody id="table-rows"></tbody>
                 </table>
             </div>
-
-            <div style="margin-top: 20px; line-height: 1.6;">
-                <strong>CHECKED BY:</strong> <input type="text" style="width: 200px; border-bottom: 1px solid #000;"><br>
-                
-                <p><small>WHILE CHECKING FOLLOWING  POINTS CONSIDERED & MARK GIVEN ACCORDINGLY.</small></p>
-                <p><small>POINTS CONSIDERED : Products Condition, Freshness, Size, Quality, Taste.</small></p>
-                <strong>REMARK:</strong>
-                <textarea style="border: 1px solid #ccc; height: 40px; margin-top: 5px;"></textarea>
-            </div>
         </div>
     </div>
 
     <script>
+        const auditPoints = [
+            { p: "Canteen Entrance Cleaning", f: "Daily" },
+            { p: "Canteen Floor Cleaning", f: "Daily" },
+            { p: "Door Cleaning", f: "Daily" },
+            { p: "Cleaning Of Table", f: "Daily" },
+            { p: "Cleaning Of Door Glass", f: "Daily" },
+            { p: "Cleaning Of Wash Basin", f: "Daily" },
+            { p: "Garbage Collection", f: "Daily" },
+            { p: "HK Machine Condition", f: "Daily" },
+            { p: "Avaibility Of Dustbin", f: "Daily" },
+            { p: "Dust Bin Washing", f: "Daily" },
+            { p: "Cleaning Of Toilet", f: "Daily" },
+            { p: "Cobweb Cleaning", f: "Weekly" },
+            { p: "Cleaning Of Windows Glass", f: "Weekly" },
+            { p: "Duct Cleaning", f: "Weekly" },
+            { p: "Water Fountain Cleaning", f: "Weekly" },
+            { p: "Chair Cleaning", f: "Monthly" },
+            { p: "Working On Pest-O-Flash", f: "Weekly" },
+            { p: "Wash Basin Tap Condition", f: "Daily" }
+        ];
+
+        const biscuitData = [
+            { name: "Good Day Butter", qty: "180" },
+            { name: "Krack Jack", qty: "144" },
+            { name: "Happy Happy", qty: "144" },
+            { name: "Marie Gold", qty: "168" },
+            { name: "Patanjali", qty: "200" },
+            { name: "Parle G", qty: "360" },
+            { name: "Patanjali - Coconut", qty: "144" }
+        ];
+
         function buildTable() {
             const tbody = document.getElementById('table-rows');
+            if(!tbody) return;
             tbody.innerHTML = '';
             for(let i=1; i<=12; i++) {
                 tbody.innerHTML += `<tr>
@@ -214,49 +173,184 @@
                     <td><input type="text"></td>
                     <td><input type="number"></td>
                     <td><input type="number"></td>
-                    <td>
-                        <select>
-                            <option value="">--</option>
-                            <option>Excellent</option>
-                            <option>Good</option>
-                            <option>Average</option>
-                            <option>Poor</option>
-                        </select>
-                    </td>
+                    <td><select><option>--</option><option>Excellent</option><option>Good</option><option>Average</option><option>Poor</option></select></td>
                 </tr>`;
             }
         }
         buildTable();
 
         function updateCategory(name, element) {
-            document.getElementById('report-title').innerText = `CHECK SHEET OF INCOMING ${name}`;
-            document.getElementById('dynamic-column').innerText = `NAME OF THE ${name}`;
+            document.getElementById('report-content').innerHTML = `
+                <h2 id="report-title">CHECK SHEET OF INCOMING ${name}</h2>
+                <div style="margin-bottom: 8px;">
+                    <strong>DATE:</strong> <input type="date" style="width: 120px; border-bottom: 1px solid #000;">
+                </div>
+                <table>
+                    <thead>
+                        <tr><th width="8%">SR.</th><th width="42%">NAME OF THE ${name}</th><th width="15%">QTY REC.</th><th width="15%">QTY CHK.</th><th width="20%">RATING</th></tr>
+                    </thead>
+                    <tbody id="table-rows"></tbody>
+                </table>
+                <div style="margin-top: 15px;">
+                    <strong>CHECKED BY:</strong> <input type="text" style="width: 180px; border-bottom: 1px solid #000;"><br>
+                    <p style="margin: 5px 0;"><small>WHILE CHEKING FOLLOWING POINTS CONSIDERED AND MARKS GIVEN ACCORDINGLY.</small></p>
+                    <p style="margin: 5px 0;"><small>POINTS CONSIDERED : Products Condition, Freshness, Size, Quality, Taste, Cleanliness.</small></p>
+                    <strong>REMARK:</strong><textarea style="border: 1px solid #ccc; height: 40px; width: 100%;"></textarea>
+                </div>`;
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
             element.classList.add('active');
-            
-            // On mobile, scroll to top of report when item is clicked
-            if(window.innerWidth < 1024) {
-                window.scrollTo({ top: 200, behavior: 'smooth' });
+            buildTable();
+        }
+
+        function showHousekeeping(element) {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            element.classList.add('active');
+
+            let rows = auditPoints.map((item, index) => `
+                <tr class="audit-row">
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td>${item.p}<br><small><strong>Freq:</strong> ${item.f}</small></td>
+                    <td><select style="border: 1px solid #eee;"><option value="">--</option><option>YES</option><option>NO</option></select></td>
+                    <td><input type="time"></td>
+                </tr>`).join('');
+
+            document.getElementById('report-content').innerHTML = `
+                <h2 id="report-title">Canteen Housekeeping Audit Sheet</h2>
+                <table style="margin-bottom: 10px;">
+                    <tr>
+                        <td width="15%"><strong>Location</strong></td><td width="35%">Canteen</td>
+                        <td width="15%"><strong>HK Person</strong></td><td width="35%"><input type="text" placeholder="Name"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Date:</strong></td><td colspan="3"><input type="date" style="width: 140px;"></td>
+                    </tr>
+                </table>
+                <table>
+                    <thead>
+                        <tr style="background: #f2f2f2;">
+                            <th style="width: 8%;">Sr No</th>
+                            <th style="width: 52%;">Audit Point / Frequency </th>
+                            <th style="width: 20%;">Audit Remark (Yes/No)</th>
+                            <th style="width: 20%;">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; font-size: 11px;">
+                    <div style="text-align: center;">___________________<br><strong>Auditor Sign</strong></div>
+                    <div style="text-align: center;">___________________<br><strong>Sign. Of Sodexo </strong></div>
+                    <div style="text-align: center;">___________________<br><strong>Sign of BAL </strong></div>
+                </div>`;
+        }
+
+        function showBiscuitAudit(element) {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            element.classList.add('active');
+
+            let rows = biscuitData.map((item, index) => `
+                <tr class="audit-row">
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td><input type="text" value="${item.qty}"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                </tr>`).join('');
+
+            document.getElementById('report-content').innerHTML = `
+                <h2 id="report-title">Weekly Biscuit Audit Report</h2>
+                <div style="margin-bottom: 8px;">
+                    <strong>Date:</strong> <input type="date" style="width: 140px; border-bottom: 1px solid #000;">
+                </div>
+                <table>
+                    <thead>
+                        <tr style="background: #f2f2f2;">
+                            <th style="width: 5%;">Sr No</th>
+                            <th style="width: 25%;">Biscuit Name</th>
+                            <th style="width: 10%;">Packets Receive</th>
+                            <th style="width: 10%;">A.P Qty</th>
+                            <th style="width: 10%;">P.P.QTY</th>
+                            <th style="width: 10%;">T.B.S.</th>
+                            <th style="width: 10%;">D.I.S.</th>
+                            <th style="width: 20%;">Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div style="margin-top: 50px; display: flex; justify-content: space-between; font-size: 11px;">
+                    <div style="text-align: center;">___________________<br><strong>Auditor Sign</strong></div>
+                    <div style="text-align: center;">___________________<br><strong>Sign. Of Sodexo </strong></div>
+                    <div style="text-align: center;">___________________<br><strong>Sign of BAL </strong></div>
+                </div>`;
+        }
+
+        function showGroceryAudit(element) {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            element.classList.add('active');
+
+            let groceryRows = '';
+            for(let i=1; i<=20; i++) {
+                groceryRows += `
+                <tr style="height: 28px;">
+                    <td style="text-align: center;">${i}</td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="date"></td>
+                    <td><input type="date"></td>
+                    <td><input type="text"></td>
+                </tr>`;
             }
+
+            document.getElementById('report-content').innerHTML = `
+                <h2 id="report-title">Check Sheet of Incoming Grocery</h2>
+                <div style="margin-bottom: 8px;">
+                    <strong>Date:</strong> <input type="date" style="width: 140px; border-bottom: 1px solid #000;">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">Sr No</th>
+                            <th style="width: 18%;">Item / Activity</th>
+                            <th style="width: 10%;">Supplier</th>
+                            <th style="width: 12%;">Brand Name</th>
+                            <th style="width: 8%;">FSSAI</th>
+                            <th style="width: 10%;">Qty. Checked (In Kg)</th>
+                            <th style="width: 12%;">Date Of Mfg.</th>
+                            <th style="width: 12%;">Date of Expiry</th>
+                            <th style="width: 13%;">Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody>${groceryRows}</tbody>
+                </table>
+                <div style="margin-top: 15px; font-size: 10px; line-height: 1.4;">
+                    <p style="margin: 0;"><strong>While Checking Following points considered and marks given accordingly</strong></p>
+                    <p style="margin: 0;">While Checking points Considered 1. Material Coming Condition 2. Freshness 3.Size 4. Quality 5. Taste 6. Cleanliness.</p>
+                </div>
+                <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px;">
+                    <div style="text-align: center;">___________________<br><strong>Auditor Sign</strong></div>
+                    <div style="text-align: center;">___________________<br><strong>Sign. Of Sodexo </strong></div>
+                    <div style="text-align: center;">___________________<br><strong>Sign of BAL </strong></div>
+                </div>`;
         }
 
         function generatePDF() {
             const element = document.getElementById('report-content');
             const name = document.getElementById('report-title').innerText;
             
-            // Temporarily fix width for PDF generation to ensure it looks like A4
-            const originalWidth = element.style.width;
-            element.style.width = "210mm"; 
-
-            html2pdf().set({
-                margin: 5,
+            const opt = {
+                margin: 0,
                 filename: `${name}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
+                image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(element).save().then(() => {
-                element.style.width = originalWidth; // Restore original width
-            });
+            };
+
+            html2pdf().set(opt).from(element).save();
         }
     </script>
 </body>
