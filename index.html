@@ -3,354 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canteen Management System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>Secure CCTV Audit System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --sidebar-width: 260px;
-            --primary-color: #2c3e50;
-            --accent-color: #27ae60;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            background-color: #f4f7f6;
-            flex-direction: row;
-        }
-
-        /* --- SIDEBAR --- */
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--primary-color);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-        .sidebar-header { padding: 20px; background: #1a252f; text-align: center; font-weight: bold; }
-        .sidebar ul { list-style: none; padding: 0; margin: 0; }
-        .sidebar li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #34495e; font-size: 13px; text-transform: uppercase; }
-        .sidebar li.active { background-color: var(--accent-color); }
-
-        /* --- MAIN CONTENT --- */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            flex-grow: 1;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        .controls { margin-bottom: 15px; width: 100%; max-width: 210mm; text-align: center; }
-        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; width: 100%; max-width: 300px; }
-        .btn-download { background-color: var(--accent-color); }
-
-        /* --- THE REPORT PAGE (A4 Optimization) --- */
-        #report-content {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 8mm;
-            background: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        h2 { font-size: 1.1rem; text-align: center; text-decoration: underline; margin: 5px 0 15px 0; }
-
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid black; padding: 4px 6px; font-size: 10px; word-wrap: break-word; }
-
-        input, select, textarea { width: 100%; border: none; font-size: 10px; background: transparent; outline: none; }
-        
-        .audit-row { height: 32px; }
-
-        @media (max-width: 1024px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; position: relative; max-height: 200px; }
-            .sidebar ul { display: flex; overflow-x: auto; white-space: nowrap; }
-            .sidebar li { display: inline-block; padding: 10px 20px; border-bottom: none; border-right: 1px solid #34495e; }
-            .main-content { margin-left: 0; padding: 5px; overflow-x: auto; }
-            #report-content { zoom: 0.45; transform-origin: top center; }
-        }
-
-        @media print {
-            .sidebar, .controls { display: none !important; }
-            .main-content { margin-left: 0; padding: 0; }
-            #report-content { box-shadow: none; padding: 5mm; width: 100%; }
-        }
+        .sticky-col { position: sticky; left: 0; background: #f8fafc; z-index: 10; border-right: 2px solid #e2e8f0; }
+        .check-cell { min-width: 40px; text-align: center; border: 1px solid #e2e8f0; }
+        .tab-btn.active { border-bottom: 3px solid #fff; font-weight: bold; }
+        #auth-screen { transition: all 0.5s ease-in-out; }
+        .hidden { display: none !important; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 font-sans text-slate-800">
 
-    <div class="sidebar">
-        <div class="sidebar-header">MENU</div>
-        <ul id="category-list">
-            <li onclick="updateCategory('BAKERY PRODUCT', this)" class="active">Bakery</li>
-            <li onclick="updateCategory('EGGS', this)">Eggs</li>
-            <li onclick="updateCategory('FRUITS', this)">Fruits</li>
-            <li onclick="updateCategory('MILK', this)">Milk</li>
-            <li onclick="updateCategory('VEGETABLES', this)">Vegetables</li>
-            <li onclick="showHousekeeping(this)">Housekeeping Audit</li>
-            <li onclick="showBiscuitAudit(this)">Weekly Biscuit Audit</li>
-            <li onclick="showGroceryAudit(this)">Incoming Grocery</li>
-        </ul>
-    </div>
-
-    <div class="main-content">
-        <div class="controls">
-            <button class="btn btn-download" onclick="generatePDF()">Download PDF</button>
-        </div>
-
-        <div id="report-content">
-            <h2 id="report-title">CHECK SHEET OF INCOMING BAKERY PRODUCT</h2>
-            <div id="dynamic-body">
-                <div style="margin-bottom: 8px;">
-                    <strong>DATE:</strong> <input type="date" style="width: 120px; border-bottom: 1px solid #000;">
+    <div id="auth-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-indigo-900">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <h2 class="text-3xl font-black text-indigo-700 mb-2">CCTV SECURE</h2>
+            <p class="text-slate-500 mb-6 text-sm">Authentication Required to Access System</p>
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Email Address</label>
+                    <input type="email" id="loginEmail" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="admin@company.com">
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 8%;">SR.</th>
-                            <th style="width: 42%;">NAME OF THE BAKERY PRODUCT</th>
-                            <th style="width: 15%;">QTY REC.</th>
-                            <th style="width: 15%;">QTY CHK.</th>
-                            <th style="width: 20%;">RATING</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-rows"></tbody>
-                </table>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Password</label>
+                    <input type="password" id="loginPass" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition uppercase tracking-widest">Login to App</button>
+                <p id="loginError" class="text-red-500 text-xs text-center hidden"></p>
             </div>
         </div>
     </div>
 
-    <script>
-        const auditPoints = [
-            { p: "Canteen Entrance Cleaning", f: "Daily" },
-            { p: "Canteen Floor Cleaning", f: "Daily" },
-            { p: "Door Cleaning", f: "Daily" },
-            { p: "Cleaning Of Table", f: "Daily" },
-            { p: "Cleaning Of Door Glass", f: "Daily" },
-            { p: "Cleaning Of Wash Basin", f: "Daily" },
-            { p: "Garbage Collection", f: "Daily" },
-            { p: "HK Machine Condition", f: "Daily" },
-            { p: "Avaibility Of Dustbin", f: "Daily" },
-            { p: "Dust Bin Washing", f: "Daily" },
-            { p: "Cleaning Of Toilet", f: "Daily" },
-            { p: "Cobweb Cleaning", f: "Weekly" },
-            { p: "Cleaning Of Windows Glass", f: "Weekly" },
-            { p: "Duct Cleaning", f: "Weekly" },
-            { p: "Water Fountain Cleaning", f: "Weekly" },
-            { p: "Chair Cleaning", f: "Monthly" },
-            { p: "Working On Pest-O-Flash", f: "Weekly" },
-            { p: "Wash Basin Tap Condition", f: "Daily" }
-        ];
-
-        const biscuitData = [
-            { name: "Good Day Butter", qty: "180" },
-            { name: "Krack Jack", qty: "144" },
-            { name: "Happy Happy", qty: "144" },
-            { name: "Marie Gold", qty: "168" },
-            { name: "Patanjali", qty: "200" },
-            { name: "Parle G", qty: "360" },
-            { name: "Patanjali - Coconut", qty: "144" }
-        ];
-
-        function buildTable() {
-            const tbody = document.getElementById('table-rows');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            for(let i=1; i<=12; i++) {
-                tbody.innerHTML += `<tr>
-                    <td>${i}</td>
-                    <td><input type="text"></td>
-                    <td><input type="number"></td>
-                    <td><input type="number"></td>
-                    <td><select><option>--</option><option>Excellent</option><option>Good</option><option>Average</option><option>Poor</option></select></td>
-                </tr>`;
-            }
-        }
-        buildTable();
-
-        function updateCategory(name, element) {
-            document.getElementById('report-content').innerHTML = `
-                <h2 id="report-title">CHECK SHEET OF INCOMING ${name}</h2>
-                <div style="margin-bottom: 8px;">
-                    <strong>DATE:</strong> <input type="date" style="width: 120px; border-bottom: 1px solid #000;">
+    <main id="main-app" class="hidden">
+        <nav class="bg-indigo-700 text-white shadow-xl sticky top-0 z-50">
+            <div class="max-w-full mx-auto px-6 py-3 flex flex-wrap justify-between items-center">
+                <div class="flex items-center space-x-6">
+                    <h1 class="text-xl font-black tracking-tighter">CCTV <span class="text-indigo-200">AUDIT</span></h1>
+                    <div class="flex bg-indigo-800 rounded-lg p-1">
+                        <button onclick="showTab('checksheet')" class="tab-btn active px-4 py-1 text-sm">Checksheet</button>
+                        <button onclick="verifyAdminAccess()" class="tab-btn px-4 py-1 text-sm">Admin Dashboard</button>
+                    </div>
                 </div>
-                <table>
-                    <thead>
-                        <tr><th width="8%">SR.</th><th width="42%">NAME OF THE ${name}</th><th width="15%">QTY REC.</th><th width="15%">QTY CHK.</th><th width="20%">RATING</th></tr>
-                    </thead>
-                    <tbody id="table-rows"></tbody>
-                </table>
-                <div style="margin-top: 15px;">
-                    <strong>CHECKED BY:</strong> <input type="text" style="width: 180px; border-bottom: 1px solid #000;"><br>
-                    <p style="margin: 5px 0;"><small>WHILE CHEKING FOLLOWING POINTS CONSIDERED AND MARKS GIVEN ACCORDINGLY.</small></p>
-                    <p style="margin: 5px 0;"><small>POINTS CONSIDERED : Products Condition, Freshness, Size, Quality, Taste, Cleanliness.</small></p>
-                    <strong>REMARK:</strong><textarea style="border: 1px solid #ccc; height: 40px; width: 100%;"></textarea>
-                </div>`;
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            element.classList.add('active');
-            buildTable();
-        }
 
-        function showHousekeeping(element) {
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            element.classList.add('active');
-
-            let rows = auditPoints.map((item, index) => `
-                <tr class="audit-row">
-                    <td style="text-align: center;">${index + 1}</td>
-                    <td>${item.p}<br><small><strong>Freq:</strong> ${item.f}</small></td>
-                    <td><select style="border: 1px solid #eee;"><option value="">--</option><option>YES</option><option>NO</option></select></td>
-                    <td><input type="time"></td>
-                </tr>`).join('');
-
-            document.getElementById('report-content').innerHTML = `
-                <h2 id="report-title">Canteen Housekeeping Audit Sheet</h2>
-                <table style="margin-bottom: 10px;">
-                    <tr>
-                        <td width="15%"><strong>Location</strong></td><td width="35%">Canteen</td>
-                        <td width="15%"><strong>HK Person</strong></td><td width="35%"><input type="text" placeholder="Name"></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Date:</strong></td><td colspan="3"><input type="date" style="width: 140px;"></td>
-                    </tr>
-                </table>
-                <table>
-                    <thead>
-                        <tr style="background: #f2f2f2;">
-                            <th style="width: 8%;">Sr No</th>
-                            <th style="width: 52%;">Audit Point / Frequency </th>
-                            <th style="width: 20%;">Audit Remark (Yes/No)</th>
-                            <th style="width: 20%;">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-                <div style="margin-top: 20px; display: flex; justify-content: space-between; font-size: 11px;">
-                    <div style="text-align: center;">___________________<br><strong>Auditor Sign</strong></div>
-                    <div style="text-align: center;">___________________<br><strong>Sign. Of Sodexo </strong></div>
-                    <div style="text-align: center;">___________________<br><strong>Sign of BAL </strong></div>
-                </div>`;
-        }
-
-        function showBiscuitAudit(element) {
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            element.classList.add('active');
-
-            let rows = biscuitData.map((item, index) => `
-                <tr class="audit-row">
-                    <td style="text-align: center;">${index + 1}</td>
-                    <td>${item.name}</td>
-                    <td><input type="text" value="${item.qty}"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                </tr>`).join('');
-
-            document.getElementById('report-content').innerHTML = `
-                <h2 id="report-title">Weekly Biscuit Audit Report</h2>
-                <div style="margin-bottom: 8px;">
-                    <strong>Date:</strong> <input type="date" style="width: 140px; border-bottom: 1px solid #000;">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center bg-indigo-600 rounded-lg px-3 py-1 space-x-2">
+                        <input type="month" id="globalDate" onchange="loadNewDate()" class="bg-transparent border-none text-white text-sm font-bold outline-none cursor-pointer">
+                    </div>
+                    <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs font-bold transition">LOGOUT</button>
                 </div>
-                <table>
-                    <thead>
-                        <tr style="background: #f2f2f2;">
-                            <th style="width: 5%;">Sr No</th>
-                            <th style="width: 25%;">Biscuit Name</th>
-                            <th style="width: 10%;">Packets Receive</th>
-                            <th style="width: 10%;">A.P Qty</th>
-                            <th style="width: 10%;">P.P.QTY</th>
-                            <th style="width: 10%;">T.B.S.</th>
-                            <th style="width: 10%;">D.I.S.</th>
-                            <th style="width: 20%;">Remark</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-                <div style="margin-top: 50px; display: flex; justify-content: space-between; font-size: 11px;">
-                    <div style="text-align: center;">___________________<br><strong>Auditor Sign</strong></div>
-                    <div style="text-align: center;">___________________<br><strong>Sign. Of Sodexo </strong></div>
-                    <div style="text-align: center;">___________________<br><strong>Sign of BAL </strong></div>
-                </div>`;
-        }
+            </div>
+        </nav>
 
-        function showGroceryAudit(element) {
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            element.classList.add('active');
-
-            let groceryRows = '';
-            for(let i=1; i<=20; i++) {
-                groceryRows += `
-                <tr style="height: 28px;">
-                    <td style="text-align: center;">${i}</td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="date"></td>
-                    <td><input type="date"></td>
-                    <td><input type="text"></td>
-                </tr>`;
-            }
-
-            document.getElementById('report-content').innerHTML = `
-                <h2 id="report-title">Check Sheet of Incoming Grocery</h2>
-                <div style="margin-bottom: 8px;">
-                    <strong>Date:</strong> <input type="date" style="width: 140px; border-bottom: 1px solid #000;">
+        <section id="tab-checksheet" class="p-4">
+            <div class="bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto overflow-y-auto max-h-[82vh]">
+                    <table class="w-full text-[11px] text-left border-collapse">
+                        <thead id="table-head" class="bg-slate-200 text-slate-600 sticky top-0 z-20"></thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">Sr No</th>
-                            <th style="width: 18%;">Item / Activity</th>
-                            <th style="width: 10%;">Supplier</th>
-                            <th style="width: 12%;">Brand Name</th>
-                            <th style="width: 8%;">FSSAI</th>
-                            <th style="width: 10%;">Qty. Checked (In Kg)</th>
-                            <th style="width: 12%;">Date Of Mfg.</th>
-                            <th style="width: 12%;">Date of Expiry</th>
-                            <th style="width: 13%;">Remark</th>
-                        </tr>
-                    </thead>
-                    <tbody>${groceryRows}</tbody>
-                </table>
-                <div style="margin-top: 15px; font-size: 10px; line-height: 1.4;">
-                    <p style="margin: 0;"><strong>While Checking Following points considered and marks given accordingly</strong></p>
-                    <p style="margin: 0;">While Checking points Considered 1. Material Coming Condition 2. Freshness 3.Size 4. Quality 5. Taste 6. Cleanliness.</p>
-                </div>
-                <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px;">
-                    <div style="text-align: center;">___________________<br><strong>Auditor Sign</strong></div>
-                    <div style="text-align: center;">___________________<br><strong>Sign. Of Sodexo </strong></div>
-                    <div style="text-align: center;">___________________<br><strong>Sign of BAL </strong></div>
-                </div>`;
-        }
+            </div>
+        </section>
 
-        function generatePDF() {
-            const element = document.getElementById('report-content');
-            const name = document.getElementById('report-title').innerText;
+        <section id="tab-admin" class="hidden p-6 max-w-6xl mx-auto space-y-6">
+            <div class="flex justify-between items-center bg-amber-50 p-4 border border-amber-200 rounded-lg mb-4">
+                <p class="text-amber-800 text-sm font-medium">⚠️ <b>Admin Mode Active:</b> You can now add, delete, or modify system configurations.</p>
+                <button onclick="showTab('checksheet')" class="text-xs bg-slate-800 text-white px-2 py-1 rounded">Lock Admin</button>
+            </div>
             
-            const opt = {
-                margin: 0,
-                filename: `${name}.pdf`,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
+                    <h2 class="text-lg font-bold mb-4">Manage Camera Assets</h2>
+                    <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
+                        <input type="text" id="camId" placeholder="Asset No (e.g. CAM-01)" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-green-400">
+                        <input type="text" id="camLoc" placeholder="Camera Location" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-green-400">
+                        <button onclick="saveCamera()" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">SAVE CAMERA</button>
+                    </div>
+                    <ul id="camera-list" class="space-y-2 overflow-y-auto max-h-64"></ul>
+                </div>
 
-            html2pdf().set(opt).from(element).save();
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
+                    <h2 class="text-lg font-bold mb-4">Manage Checkpoints</h2>
+                    <div class="flex gap-2 mb-6 bg-slate-50 p-4 rounded-lg">
+                        <input type="text" id="pointName" placeholder="New Checkpoint Name" class="flex-grow border p-2 rounded outline-none focus:ring-2 focus:ring-blue-400">
+                        <button onclick="savePoint()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">+</button>
+                    </div>
+                    <ul id="points-list" class="space-y-2 overflow-y-auto max-h-64"></ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyC53SyOf8S1qUMWCUR8PxWOLL1jdENMkqk",
+            authDomain: "cctv-online-checksheet.firebaseapp.com",
+            databaseURL: "https://cctv-online-checksheet-default-rtdb.firebaseio.com",
+            projectId: "cctv-online-checksheet",
+            storageBucket: "cctv-online-checksheet.firebasestorage.app",
+            messagingSenderId: "823455470476",
+            appId: "1:823455470476:web:419a445f890095a8c37ca9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // --- LEVEL 1 LOGIN ---
+        window.handleLogin = () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            signInWithEmailAndPassword(auth, email, pass).catch(err => {
+                const errEl = document.getElementById('loginError');
+                errEl.innerText = "Access Denied: Incorrect ID or Password.";
+                errEl.classList.remove('hidden');
+            });
+        };
+
+        window.handleLogout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                initApp();
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('main-app').classList.add('hidden');
+            }
+        });
+
+        // --- LEVEL 2 ADMIN LOCK ---
+        window.verifyAdminAccess = () => {
+            const confirmPass = prompt("ADMIN SECURITY: Please enter your password again to manage settings:");
+            if (confirmPass) {
+                // We re-verify with the existing logged in email
+                signInWithEmailAndPassword(auth, auth.currentUser.email, confirmPass)
+                    .then(() => showTab('admin'))
+                    .catch(() => alert("Verification Failed. Admin access denied."));
+            }
+        };
+
+        // --- CORE APP LOGIC ---
+        let cameras = {};
+        let checkpoints = [];
+        const dateInput = document.getElementById('globalDate');
+        if(!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 7);
+
+        function initApp() {
+            onValue(ref(db, 'config'), (snapshot) => {
+                const config = snapshot.val() || { cameras: {}, points: {} };
+                cameras = config.cameras || {};
+                checkpoints = Object.entries(config.points || {}).map(([id, val]) => ({id, val}));
+                renderAdminLists();
+                renderChecksheet();
+            });
+        }
+
+        window.showTab = (tab) => {
+            document.getElementById('tab-checksheet').classList.toggle('hidden', tab !== 'checksheet');
+            document.getElementById('tab-admin').classList.toggle('hidden', tab !== 'admin');
+            const btns = document.querySelectorAll('.tab-btn');
+            btns[0].classList.toggle('active', tab === 'checksheet');
+            btns[1].classList.toggle('active', tab === 'admin');
+        };
+
+        window.loadNewDate = () => renderChecksheet();
+
+        // Admin database actions
+        window.saveCamera = () => {
+            const id = document.getElementById('camId').value.trim();
+            const loc = document.getElementById('camLoc').value.trim();
+            if(id && loc) {
+                set(ref(db, `config/cameras/${id}`), loc);
+                document.getElementById('camId').value = '';
+                document.getElementById('camLoc').value = '';
+            }
+        };
+
+        window.deleteCamera = (id) => { if(confirm("Delete " + id + "?")) remove(ref(db, `config/cameras/${id}`)); };
+        window.savePoint = () => {
+            const name = document.getElementById('pointName').value.trim();
+            if(name) {
+                set(ref(db, `config/points/${Date.now()}`), name);
+                document.getElementById('pointName').value = '';
+            }
+        };
+        window.deletePoint = (id) => remove(ref(db, `config/points/${id}`));
+
+        // Checksheet Logic
+        window.updateCheck = (c, p, d, s) => set(ref(db, `data/${dateInput.value}/checks/${c}/${p}/${d}`), s);
+        window.updateRemark = (c, v) => set(ref(db, `data/${dateInput.value}/remarks/${c}`), v);
+
+        function renderChecksheet() {
+            const head = document.getElementById('table-head');
+            const body = document.getElementById('table-body');
+            let daysHtml = '';
+            for(let i=1; i<=31; i++) daysHtml += `<th class="check-cell py-3">${i}</th>`;
+            
+            // Added Sr. No header
+            head.innerHTML = `<tr class="uppercase">
+                <th class="p-3 border sticky-col z-30 bg-slate-200" style="left:0">Sr.</th>
+                <th class="p-3 border sticky-col z-30 bg-slate-200 min-w-[180px]" style="left:40px">Asset Details</th>
+                ${daysHtml}
+                <th class="p-3 border min-w-[150px]">Monthly Remarks</th>
+            </tr>`;
+
+            let bodyHtml = '';
+            const camList = Object.entries(cameras);
+            
+            camList.forEach(([camId, loc], camIndex) => {
+                checkpoints.forEach((p, pIdx) => {
+                    bodyHtml += `<tr class="border-b hover:bg-slate-50 transition">`;
+                    
+                    // Sr No. Column (Numbered Serially)
+                    if(pIdx === 0) bodyHtml += `<td rowspan="${checkpoints.length}" class="p-3 border sticky-col bg-white text-center font-bold text-slate-400" style="left:0">${camIndex + 1}</td>`;
+                    
+                    // Asset Details Column
+                    if(pIdx === 0) bodyHtml += `<td rowspan="${checkpoints.length}" class="p-3 border sticky-col bg-slate-50 font-bold text-indigo-700 uppercase" style="left:40px">${camId}<br><span class="text-[9px] text-slate-400 font-normal tracking-wider">${loc}</span></td>`;
+                    
+                    // Point Name
+                    bodyHtml += `<td class="p-2 border bg-white font-bold text-slate-500 border-l-4 border-l-indigo-300 min-w-[140px]">${p.val}</td>`;
+                    
+                    // 31 Day Checkboxes
+                    for(let d=1; d<=31; d++) bodyHtml += `<td class="check-cell"><input type="checkbox" data-path="${camId}-${p.id}-${d}" onclick="updateCheck('${camId}','${p.id}',${d},this.checked)"></td>`;
+                    
+                    // Remarks
+                    if(pIdx === 0) bodyHtml += `<td rowspan="${checkpoints.length}" class="p-2 border bg-slate-50"><textarea onchange="updateRemark('${camId}',this.value)" data-rem="${camId}" class="text-[10px] border p-2 h-full w-full rounded focus:ring-1 focus:ring-indigo-400 outline-none shadow-inner"></textarea></td>`;
+                    bodyHtml += `</tr>`;
+                });
+            });
+            body.innerHTML = bodyHtml || '<tr><td colspan="35" class="p-10 text-center text-slate-400">No data found. Add cameras in Dashboard.</td></tr>';
+
+            // Sync values
+            onValue(ref(db, `data/${dateInput.value}`), (snap) => {
+                const data = snap.val() || {};
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    const [c, p, d] = cb.dataset.path.split('-');
+                    cb.checked = data.checks?.[c]?.[p]?.[d] || false;
+                });
+                document.querySelectorAll('textarea').forEach(ta => ta.value = data.remarks?.[ta.dataset.rem] || '');
+            });
+        }
+
+        function renderAdminLists() {
+            document.getElementById('camera-list').innerHTML = Object.entries(cameras).map(([id, loc]) => `<li class="flex justify-between items-center p-3 bg-white shadow-sm rounded-lg border text-xs"><span><b class="text-indigo-600">${id}</b>: ${loc}</span><button onclick="deleteCamera('${id}')" class="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">DELETE</button></li>`).join('');
+            document.getElementById('points-list').innerHTML = checkpoints.map(p => `<li class="flex justify-between items-center p-3 bg-white shadow-sm rounded-lg border text-xs"><span>${p.val}</span><button onclick="deletePoint('${p.id}')" class="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">DELETE</button></li>`).join('');
         }
     </script>
 </body>
