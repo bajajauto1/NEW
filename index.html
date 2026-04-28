@@ -11,6 +11,9 @@
         .tab-btn.active { border-bottom: 3px solid #fff; font-weight: bold; }
         #auth-screen { transition: all 0.5s ease-in-out; }
         .hidden { display: none !important; }
+        .state-btn { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; transition: all 0.2s; background: white; margin: 0 auto; }
+        .state-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .state-fail { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
@@ -18,7 +21,7 @@
     <div id="auth-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-indigo-900">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
             <h2 class="text-3xl font-black text-indigo-700 mb-2">CCTV SECURE</h2>
-            <p class="text-slate-500 mb-6 text-sm">Authentication Required to Access System</p>
+            <p class="text-slate-500 mb-6 text-sm">Authentication Required</p>
             <div class="space-y-4 text-left">
                 <div>
                     <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Email Address</label>
@@ -44,20 +47,24 @@
                         <button onclick="verifyAdminAccess()" class="tab-btn px-4 py-1 text-sm">Admin Dashboard</button>
                     </div>
                 </div>
-
                 <div class="flex items-center space-x-4">
-                    <div class="flex items-center bg-indigo-600 rounded-lg px-3 py-1 space-x-2">
-                        <input type="month" id="globalDate" onchange="loadNewDate()" class="bg-transparent border-none text-white text-sm font-bold outline-none cursor-pointer">
-                    </div>
+                    <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition transform active:scale-95">
+                        <span class="text-lg">💾</span> SAVE DATA BACKUP
+                    </button>
+                    <input type="month" id="globalDate" onchange="loadNewDate()" class="bg-indigo-600 border-none text-white text-sm font-bold rounded px-2 py-1 outline-none cursor-pointer">
                     <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs font-bold transition">LOGOUT</button>
                 </div>
             </div>
         </nav>
 
-        <section id="tab-checksheet" class="p-4">
+        <section id="tab-checksheet" class="p-4 space-y-4">
+            <div class="max-w-md mx-auto">
+                <input type="text" id="checksheetSearch" onkeyup="renderChecksheet()" placeholder="🔍 Search Camera ID or Location..." class="w-full border-2 border-indigo-200 p-2 rounded-xl text-sm outline-none focus:border-indigo-500 shadow-sm">
+            </div>
+
             <div class="bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200">
-                <div class="overflow-x-auto overflow-y-auto max-h-[82vh]">
-                    <table class="w-full text-[11px] text-left border-collapse">
+                <div class="overflow-x-auto overflow-y-auto max-h-[75vh]">
+                    <table id="auditTable" class="w-full text-[11px] text-left border-collapse">
                         <thead id="table-head" class="bg-slate-200 text-slate-600 sticky top-0 z-20"></thead>
                         <tbody id="table-body"></tbody>
                     </table>
@@ -66,30 +73,23 @@
         </section>
 
         <section id="tab-admin" class="hidden p-6 max-w-6xl mx-auto space-y-6">
-            <div class="flex justify-between items-center bg-amber-50 p-4 border border-amber-200 rounded-lg mb-4">
-                <p class="text-amber-800 text-sm font-medium">⚠️ <b>Admin Mode Active:</b> You can now add, delete, or modify system configurations.</p>
-                <button onclick="showTab('checksheet')" class="text-xs bg-slate-800 text-white px-2 py-1 rounded">Lock Admin</button>
+            <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
+                <h2 class="text-lg font-bold mb-4">Manage Camera Assets</h2>
+                <div class="mb-4"><input type="text" id="adminCamSearch" onkeyup="renderAdminLists()" placeholder="🔍 Filter list..." class="w-full border p-2 rounded-lg text-sm bg-slate-50 outline-none"></div>
+                <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
+                    <input type="text" id="camId" placeholder="Asset No" class="w-full border p-2 rounded">
+                    <input type="text" id="camLoc" placeholder="Location" class="w-full border p-2 rounded">
+                    <button onclick="saveCamera()" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">SAVE CAMERA</button>
+                </div>
+                <ul id="camera-list" class="space-y-2 overflow-y-auto max-h-64"></ul>
             </div>
-            
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
-                    <h2 class="text-lg font-bold mb-4">Manage Camera Assets</h2>
-                    <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
-                        <input type="text" id="camId" placeholder="Asset No (e.g. CAM-01)" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-green-400">
-                        <input type="text" id="camLoc" placeholder="Camera Location" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-green-400">
-                        <button onclick="saveCamera()" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">SAVE CAMERA</button>
-                    </div>
-                    <ul id="camera-list" class="space-y-2 overflow-y-auto max-h-64"></ul>
+            <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
+                <h2 class="text-lg font-bold mb-4">Manage Checkpoints</h2>
+                <div class="flex gap-2 mb-6 bg-slate-50 p-4 rounded-lg">
+                    <input type="text" id="pointName" placeholder="Checkpoint Name" class="flex-grow border p-2 rounded">
+                    <button onclick="savePoint()" class="bg-blue-600 text-white px-6 rounded font-bold">+</button>
                 </div>
-
-                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
-                    <h2 class="text-lg font-bold mb-4">Manage Checkpoints</h2>
-                    <div class="flex gap-2 mb-6 bg-slate-50 p-4 rounded-lg">
-                        <input type="text" id="pointName" placeholder="New Checkpoint Name" class="flex-grow border p-2 rounded outline-none focus:ring-2 focus:ring-blue-400">
-                        <button onclick="savePoint()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">+</button>
-                    </div>
-                    <ul id="points-list" class="space-y-2 overflow-y-auto max-h-64"></ul>
-                </div>
+                <ul id="points-list" class="space-y-2 overflow-y-auto max-h-64"></ul>
             </div>
         </section>
     </main>
@@ -99,6 +99,7 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyC53SyOf8S1qUMWCUR8PxWOLL1jdENMkqk",
             authDomain: "cctv-online-checksheet.firebaseapp.com",
@@ -113,36 +114,20 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // Core Functions
         window.handleLogin = () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
-            signInWithEmailAndPassword(auth, email, pass).catch(err => {
-                const errEl = document.getElementById('loginError');
-                errEl.innerText = "Access Denied: Incorrect ID or Password.";
-                errEl.classList.remove('hidden');
-            });
+            signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Login Failed"));
         };
-
         window.handleLogout = () => signOut(auth);
-
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                initApp();
-            } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('main-app').classList.add('hidden');
-            }
+            if (user) { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); initApp(); }
+            else { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('main-app').classList.add('hidden'); }
         });
-
         window.verifyAdminAccess = () => {
-            const confirmPass = prompt("ADMIN SECURITY: Please enter your password again to manage settings:");
-            if (confirmPass) {
-                signInWithEmailAndPassword(auth, auth.currentUser.email, confirmPass)
-                    .then(() => showTab('admin'))
-                    .catch(() => alert("Verification Failed. Admin access denied."));
-            }
+            const confirmPass = prompt("ADMIN SECURITY: Re-enter password:");
+            if (confirmPass) signInWithEmailAndPassword(auth, auth.currentUser.email, confirmPass).then(() => showTab('admin')).catch(() => alert("Access denied."));
         };
 
         let cameras = {};
@@ -170,136 +155,141 @@
 
         window.loadNewDate = () => renderChecksheet();
 
+        // Database Setters
         window.saveCamera = () => {
             const id = document.getElementById('camId').value.trim();
             const loc = document.getElementById('camLoc').value.trim();
-            if(id && loc) {
-                set(ref(db, `config/cameras/${id}`), loc);
-                document.getElementById('camId').value = '';
-                document.getElementById('camLoc').value = '';
-            }
+            if(id && loc) { set(ref(db, `config/cameras/${id}`), loc); document.getElementById('camId').value = ''; document.getElementById('camLoc').value = ''; }
         };
-
-        window.deleteCamera = (id) => { if(confirm("Delete " + id + "?")) remove(ref(db, `config/cameras/${id}`)); };
+        window.deleteCamera = (id) => { if(confirm("Delete?")) remove(ref(db, `config/cameras/${id}`)); };
         window.savePoint = () => {
             const name = document.getElementById('pointName').value.trim();
-            if(name) {
-                set(ref(db, `config/points/${Date.now()}`), name);
-                document.getElementById('pointName').value = '';
-            }
+            if(name) { set(ref(db, `config/points/${Date.now()}`), name); document.getElementById('pointName').value = ''; }
         };
         window.deletePoint = (id) => remove(ref(db, `config/points/${id}`));
+        window.updateCheckState = (c, p, d, currentState) => {
+            let nextState = (currentState === "" || !currentState) ? "ok" : (currentState === "ok" ? "fail" : "");
+            set(ref(db, `data/${dateInput.value}/checks/${c}/${p}/${d}`), nextState);
+        };
+        window.updateRemark = (path, v) => set(ref(db, `data/${dateInput.value}/remarks/${path}`), v);
 
-        window.updateCheck = (c, p, d, s) => set(ref(db, `data/${dateInput.value}/checks/${c}/${p}/${d}`), s);
-        window.updateRemark = (c, v) => set(ref(db, `data/${dateInput.value}/remarks/${c}`), v);
+        // BACKUP EXPORT LOGIC
+        window.exportToCSV = () => {
+            // Include all cameras for a full backup, regardless of search filter
+            const allCams = Object.entries(cameras);
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Header
+            let headers = ["DATE (DD-MM-YYYY)", "SR NO", "CAMERA ID", "LOCATION"];
+            checkpoints.forEach(p => headers.push(p.val.toUpperCase()));
+            headers.push("SPECIFIC CAMERA REMARK", "GENERAL DAILY REMARK");
+            csvContent += headers.join(",") + "\n";
 
-        // FIX: Optimized Select All Function
-        // This will update all 31 days for a specific Camera + Point in one click
-        window.bulkCheck = (camId, pointId, status) => {
-            const updates = {};
-            for(let d=1; d<=31; d++) {
-                updates[`data/${dateInput.value}/checks/${camId}/${pointId}/${d}`] = status;
-            }
-            update(ref(db), updates).then(() => {
-                console.log(`Updated all days for ${camId} - ${pointId}`);
-            });
+            onValue(ref(db, `data/${dateInput.value}`), (snap) => {
+                const data = snap.val() || {};
+                const currentMonth = dateInput.value;
+
+                for (let d = 1; d <= 31; d++) {
+                    const formattedDay = d.toString().padStart(2, '0');
+                    allCams.forEach(([camId, loc], idx) => {
+                        let row = [`${formattedDay}-${currentMonth}`, idx + 1, camId, loc.replace(/,/g, " ")];
+                        
+                        // Checkpoints Status
+                        checkpoints.forEach(p => {
+                            let status = data.checks?.[camId]?.[p.id]?.[d] || "NOT CHECKED";
+                            row.push(status.toUpperCase());
+                        });
+
+                        // Remarks
+                        let camRemark = (data.remarks?.[`${camId}-${d}`] || "").replace(/,/g, " ");
+                        let dayRemark = idx === 0 ? (data.remarks?.[`day-${d}`] || "").replace(/,/g, " ") : "";
+                        
+                        row.push(camRemark, dayRemark);
+                        csvContent += row.map(v => `"${v}"`).join(",") + "\n";
+                    });
+                }
+                
+                // Trigger Download
+                const today = new Date().toLocaleDateString().replace(/\//g, "-");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `CCTV_Backup_${currentMonth}_Exported_${today}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }, { onlyOnce: true });
         };
 
-        function renderChecksheet() {
+        window.renderChecksheet = () => {
             const head = document.getElementById('table-head');
             const body = document.getElementById('table-body');
-            const camList = Object.entries(cameras);
+            const query = document.getElementById('checksheetSearch').value.toLowerCase();
+            const filteredCams = Object.entries(cameras).filter(([id, loc]) => id.toLowerCase().includes(query) || loc.toLowerCase().includes(query));
 
-            if (camList.length === 0) {
-                body.innerHTML = '<tr><td colspan="50" class="p-10 text-center text-slate-400">No data found. Add cameras in Dashboard.</td></tr>';
-                head.innerHTML = '';
+            if (filteredCams.length === 0) {
+                body.innerHTML = '<tr><td colspan="50" class="p-10 text-center">No cameras match search.</td></tr>';
                 return;
             }
 
-            // HEADER: We create the list of checkpoints
-            let pointsHeaderHtml = checkpoints.map(p => `<th class="p-3 border min-w-[120px] bg-slate-200 text-center">${p.val}</th>`).join('');
-            
+            let ptsHead = checkpoints.map(p => `<th class="p-3 border min-w-[110px] bg-slate-200 text-center">${p.val}</th>`).join('');
             head.innerHTML = `<tr class="uppercase">
                 <th class="p-3 border sticky-col z-30 bg-slate-200 text-center" style="left:0; width:60px;">Date</th>
-                <th class="p-3 border sticky-col z-30 bg-slate-200 min-w-[180px]" style="left:60px">Asset Details</th>
-                ${pointsHeaderHtml}
-                <th class="p-3 border min-w-[200px]">Monthly Remarks</th>
+                <th class="p-3 border sticky-col z-30 bg-slate-200 min-w-[170px]" style="left:60px">Asset Details</th>
+                ${ptsHead}
+                <th class="p-3 border min-w-[150px]">Camera Remark</th>
+                <th class="p-3 border min-w-[150px]">Daily Remark</th>
             </tr>`;
 
             let bodyHtml = '';
-            
             for (let d = 1; d <= 31; d++) {
-                camList.forEach(([camId, loc], camIndex) => {
+                filteredCams.forEach(([camId, loc], idx) => {
                     bodyHtml += `<tr class="border-b hover:bg-slate-50 transition">`;
+                    if (idx === 0) bodyHtml += `<td rowspan="${filteredCams.length}" class="p-3 border sticky-col bg-indigo-50 text-center font-black text-indigo-700" style="left:0">${d}</td>`;
                     
-                    if (camIndex === 0) {
-                        bodyHtml += `<td rowspan="${camList.length}" class="p-3 border sticky-col bg-indigo-50 text-center font-black text-indigo-700" style="left:0">${d}</td>`;
-                    }
-                    
-                    bodyHtml += `<td class="p-3 border sticky-col bg-white font-bold text-slate-700" style="left:60px">
+                    bodyHtml += `<td class="p-3 border sticky-col bg-white font-bold text-slate-700 text-[10px]" style="left:60px">
                         <div class="flex flex-col">
-                            <span class="text-indigo-600 text-xs">${camId}</span>
-                            <span class="text-[9px] text-slate-400 font-normal uppercase truncate" title="${loc}">${loc}</span>
-                            <button onclick="checkAllForCameraRow('${camId}', ${d})" class="mt-1 text-[8px] bg-indigo-100 text-indigo-600 px-1 rounded hover:bg-indigo-200">Tick Row</button>
+                            <span class="text-indigo-600 font-black">${camId}</span>
+                            <span class="text-[8px] text-slate-400 uppercase truncate">${loc}</span>
                         </div>
                     </td>`;
                     
                     checkpoints.forEach(p => {
-                        bodyHtml += `<td class="check-cell">
-                            <div class="flex flex-col items-center gap-1">
-                                <input type="checkbox" 
-                                       class="w-4 h-4"
-                                       data-path="${camId}-${p.id}-${d}" 
-                                       onclick="updateCheck('${camId}','${p.id}',${d},this.checked)">
-                                ${d === 1 ? `<button onclick="bulkCheck('${camId}', '${p.id}', true)" class="text-[7px] text-green-600 font-bold uppercase mt-1">[All 31D]</button>` : ''}
-                            </div>
+                        bodyHtml += `<td class="check-cell p-2">
+                            <button class="state-btn" data-path="${camId}-${p.id}-${d}" data-state="" onclick="updateCheckState('${camId}','${p.id}',${d},this.dataset.state)"></button>
                         </td>`;
                     });
 
-                    if (camIndex === 0) {
-                        bodyHtml += `<td rowspan="${camList.length}" class="p-2 border bg-slate-50">
-                            <textarea placeholder="Day ${d} Remarks..." 
-                                      onchange="updateRemark('day-${d}', this.value)" 
-                                      data-rem="day-${d}" 
-                                      class="text-[10px] border p-2 h-full min-h-[40px] w-full rounded focus:ring-1 focus:ring-indigo-400 outline-none shadow-inner bg-white"></textarea>
-                        </td>`;
-                    }
-                    
+                    bodyHtml += `<td class="p-2 border">
+                        <input type="text" onchange="updateRemark('${camId}-${d}', this.value)" data-rem="${camId}-${d}" placeholder="Camera issue..." class="w-full text-[10px] p-1 border rounded outline-none focus:border-indigo-400">
+                    </td>`;
+
+                    if (idx === 0) bodyHtml += `<td rowspan="${filteredCams.length}" class="p-2 border bg-slate-50"><textarea onchange="updateRemark('day-${d}', this.value)" data-rem="day-${d}" placeholder="Shift general notes..." class="text-[10px] border p-2 h-full min-h-[40px] w-full rounded outline-none focus:bg-white"></textarea></td>`;
                     bodyHtml += `</tr>`;
                 });
-                bodyHtml += `<tr class="bg-slate-300 h-1"><td colspan="${checkpoints.length + 3}"></td></tr>`;
+                bodyHtml += `<tr class="bg-slate-300 h-1"><td colspan="${checkpoints.length + 4}"></td></tr>`;
             }
             body.innerHTML = bodyHtml;
 
-            // Function to tick all checkpoints for ONE specific camera on ONE specific day
-            window.checkAllForCameraRow = (camId, day) => {
-                const updates = {};
-                checkpoints.forEach(p => {
-                    updates[`data/${dateInput.value}/checks/${camId}/${p.id}/${day}`] = true;
-                });
-                update(ref(db), updates);
-            };
-
-            // Sync values from Firebase
+            // Sync States from Firebase
             onValue(ref(db, `data/${dateInput.value}`), (snap) => {
                 const data = snap.val() || {};
-                document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                    const path = cb.dataset.path;
-                    if(path) {
-                        const [c, p, d] = path.split('-');
-                        cb.checked = data.checks?.[c]?.[p]?.[d] || false;
-                    }
+                document.querySelectorAll('.state-btn').forEach(btn => {
+                    const [c, p, d] = btn.dataset.path.split('-');
+                    const val = data.checks?.[c]?.[p]?.[d] || "";
+                    btn.dataset.state = val;
+                    btn.className = "state-btn " + (val === "ok" ? "state-ok" : val === "fail" ? "state-fail" : "");
+                    btn.innerHTML = (val === "ok" ? "✓" : val === "fail" ? "✕" : "");
                 });
-                document.querySelectorAll('textarea').forEach(ta => {
-                    ta.value = data.remarks?.[ta.dataset.rem] || '';
-                });
+                document.querySelectorAll('textarea, input[data-rem]').forEach(el => el.value = data.remarks?.[el.dataset.rem] || '');
             });
         }
 
-        function renderAdminLists() {
-            document.getElementById('camera-list').innerHTML = Object.entries(cameras).map(([id, loc]) => `<li class="flex justify-between items-center p-3 bg-white shadow-sm rounded-lg border text-xs"><span><b class="text-indigo-600">${id}</b>: ${loc}</span><button onclick="deleteCamera('${id}')" class="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">DELETE</button></li>`).join('');
+        window.renderAdminLists = () => {
+            const query = document.getElementById('adminCamSearch').value.toLowerCase();
+            document.getElementById('camera-list').innerHTML = Object.entries(cameras).filter(([id, loc]) => id.toLowerCase().includes(query) || loc.toLowerCase().includes(query)).map(([id, loc]) => `<li class="flex justify-between items-center p-3 bg-white shadow-sm rounded-lg border text-xs"><span><b>${id}</b>: ${loc}</span><button onclick="deleteCamera('${id}')" class="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">DELETE</button></li>`).join('');
             document.getElementById('points-list').innerHTML = checkpoints.map(p => `<li class="flex justify-between items-center p-3 bg-white shadow-sm rounded-lg border text-xs"><span>${p.val}</span><button onclick="deletePoint('${p.id}')" class="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">DELETE</button></li>`).join('');
-        }
+        };
     </script>
 </body>
 </html>
