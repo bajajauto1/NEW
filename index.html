@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure CCTV Audit System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .sticky-col { position: sticky; left: 0; background: #f8fafc; z-index: 10; border-right: 2px solid #e2e8f0; }
         .check-cell { min-width: 100px; text-align: center; border: 1px solid #e2e8f0; }
@@ -48,10 +49,8 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition transform active:scale-95">
-                        <span class="text-lg">💾</span> SAVE DATA BACKUP
-                    </button>
                     <input type="month" id="globalDate" onchange="loadNewDate()" class="bg-indigo-600 border-none text-white text-sm font-bold rounded px-2 py-1 outline-none cursor-pointer">
+                    <button onclick="exportToExcel()" class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-xs font-bold transition uppercase">Export Excel</button>
                     <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs font-bold transition">LOGOUT</button>
                 </div>
             </div>
@@ -64,7 +63,7 @@
 
             <div class="bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200">
                 <div class="overflow-x-auto overflow-y-auto max-h-[75vh]">
-                    <table id="auditTable" class="w-full text-[11px] text-left border-collapse">
+                    <table class="w-full text-[11px] text-left border-collapse">
                         <thead id="table-head" class="bg-slate-200 text-slate-600 sticky top-0 z-20"></thead>
                         <tbody id="table-body"></tbody>
                     </table>
@@ -75,7 +74,9 @@
         <section id="tab-admin" class="hidden p-6 max-w-6xl mx-auto space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
                 <h2 class="text-lg font-bold mb-4">Manage Camera Assets</h2>
-                <div class="mb-4"><input type="text" id="adminCamSearch" onkeyup="renderAdminLists()" placeholder="🔍 Filter list..." class="w-full border p-2 rounded-lg text-sm bg-slate-50 outline-none"></div>
+                <div class="mb-4">
+                    <input type="text" id="adminCamSearch" onkeyup="renderAdminLists()" placeholder="🔍 Filter list..." class="w-full border p-2 rounded-lg text-sm bg-slate-50 outline-none">
+                </div>
                 <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
                     <input type="text" id="camId" placeholder="Asset No" class="w-full border p-2 rounded">
                     <input type="text" id="camLoc" placeholder="Location" class="w-full border p-2 rounded">
@@ -83,6 +84,7 @@
                 </div>
                 <ul id="camera-list" class="space-y-2 overflow-y-auto max-h-64"></ul>
             </div>
+
             <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
                 <h2 class="text-lg font-bold mb-4">Manage Checkpoints</h2>
                 <div class="flex gap-2 mb-6 bg-slate-50 p-4 rounded-lg">
@@ -97,9 +99,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyC53SyOf8S1qUMWCUR8PxWOLL1jdENMkqk",
             authDomain: "cctv-online-checksheet.firebaseapp.com",
@@ -114,20 +115,34 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Core Functions
         window.handleLogin = () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
-            signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Login Failed"));
+            signInWithEmailAndPassword(auth, email, pass).catch(err => {
+                alert("Login Failed");
+            });
         };
+
         window.handleLogout = () => signOut(auth);
+
         onAuthStateChanged(auth, (user) => {
-            if (user) { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); initApp(); }
-            else { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('main-app').classList.add('hidden'); }
+            if (user) {
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                initApp();
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('main-app').classList.add('hidden');
+            }
         });
+
         window.verifyAdminAccess = () => {
             const confirmPass = prompt("ADMIN SECURITY: Re-enter password:");
-            if (confirmPass) signInWithEmailAndPassword(auth, auth.currentUser.email, confirmPass).then(() => showTab('admin')).catch(() => alert("Access denied."));
+            if (confirmPass) {
+                signInWithEmailAndPassword(auth, auth.currentUser.email, confirmPass)
+                    .then(() => showTab('admin'))
+                    .catch(() => alert("Access denied."));
+            }
         };
 
         let cameras = {};
@@ -155,71 +170,25 @@
 
         window.loadNewDate = () => renderChecksheet();
 
-        // Database Setters
         window.saveCamera = () => {
             const id = document.getElementById('camId').value.trim();
             const loc = document.getElementById('camLoc').value.trim();
             if(id && loc) { set(ref(db, `config/cameras/${id}`), loc); document.getElementById('camId').value = ''; document.getElementById('camLoc').value = ''; }
         };
+
         window.deleteCamera = (id) => { if(confirm("Delete?")) remove(ref(db, `config/cameras/${id}`)); };
         window.savePoint = () => {
             const name = document.getElementById('pointName').value.trim();
             if(name) { set(ref(db, `config/points/${Date.now()}`), name); document.getElementById('pointName').value = ''; }
         };
         window.deletePoint = (id) => remove(ref(db, `config/points/${id}`));
+
         window.updateCheckState = (c, p, d, currentState) => {
             let nextState = (currentState === "" || !currentState) ? "ok" : (currentState === "ok" ? "fail" : "");
             set(ref(db, `data/${dateInput.value}/checks/${c}/${p}/${d}`), nextState);
         };
+
         window.updateRemark = (path, v) => set(ref(db, `data/${dateInput.value}/remarks/${path}`), v);
-
-        // BACKUP EXPORT LOGIC
-        window.exportToCSV = () => {
-            // Include all cameras for a full backup, regardless of search filter
-            const allCams = Object.entries(cameras);
-            let csvContent = "data:text/csv;charset=utf-8,";
-            
-            // Header
-            let headers = ["DATE (DD-MM-YYYY)", "SR NO", "CAMERA ID", "LOCATION"];
-            checkpoints.forEach(p => headers.push(p.val.toUpperCase()));
-            headers.push("SPECIFIC CAMERA REMARK", "GENERAL DAILY REMARK");
-            csvContent += headers.join(",") + "\n";
-
-            onValue(ref(db, `data/${dateInput.value}`), (snap) => {
-                const data = snap.val() || {};
-                const currentMonth = dateInput.value;
-
-                for (let d = 1; d <= 31; d++) {
-                    const formattedDay = d.toString().padStart(2, '0');
-                    allCams.forEach(([camId, loc], idx) => {
-                        let row = [`${formattedDay}-${currentMonth}`, idx + 1, camId, loc.replace(/,/g, " ")];
-                        
-                        // Checkpoints Status
-                        checkpoints.forEach(p => {
-                            let status = data.checks?.[camId]?.[p.id]?.[d] || "NOT CHECKED";
-                            row.push(status.toUpperCase());
-                        });
-
-                        // Remarks
-                        let camRemark = (data.remarks?.[`${camId}-${d}`] || "").replace(/,/g, " ");
-                        let dayRemark = idx === 0 ? (data.remarks?.[`day-${d}`] || "").replace(/,/g, " ") : "";
-                        
-                        row.push(camRemark, dayRemark);
-                        csvContent += row.map(v => `"${v}"`).join(",") + "\n";
-                    });
-                }
-                
-                // Trigger Download
-                const today = new Date().toLocaleDateString().replace(/\//g, "-");
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `CCTV_Backup_${currentMonth}_Exported_${today}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }, { onlyOnce: true });
-        };
 
         window.renderChecksheet = () => {
             const head = document.getElementById('table-head');
@@ -251,6 +220,7 @@
                         <div class="flex flex-col">
                             <span class="text-indigo-600 font-black">${camId}</span>
                             <span class="text-[8px] text-slate-400 uppercase truncate">${loc}</span>
+                            <button onclick="checkAllRow('${camId}', ${d})" class="mt-1 text-[7px] bg-indigo-100 text-indigo-600 px-1 rounded">Tick Row</button>
                         </div>
                     </td>`;
                     
@@ -261,17 +231,22 @@
                     });
 
                     bodyHtml += `<td class="p-2 border">
-                        <input type="text" onchange="updateRemark('${camId}-${d}', this.value)" data-rem="${camId}-${d}" placeholder="Camera issue..." class="w-full text-[10px] p-1 border rounded outline-none focus:border-indigo-400">
+                        <input type="text" onchange="updateRemark('${camId}-${d}', this.value)" data-rem="${camId}-${d}" placeholder="Note..." class="w-full text-[10px] p-1 border rounded outline-none">
                     </td>`;
 
-                    if (idx === 0) bodyHtml += `<td rowspan="${filteredCams.length}" class="p-2 border bg-slate-50"><textarea onchange="updateRemark('day-${d}', this.value)" data-rem="day-${d}" placeholder="Shift general notes..." class="text-[10px] border p-2 h-full min-h-[40px] w-full rounded outline-none focus:bg-white"></textarea></td>`;
+                    if (idx === 0) bodyHtml += `<td rowspan="${filteredCams.length}" class="p-2 border bg-slate-50"><textarea onchange="updateRemark('day-${d}', this.value)" data-rem="day-${d}" placeholder="Daily Notes..." class="text-[10px] border p-2 h-full min-h-[40px] w-full rounded outline-none"></textarea></td>`;
                     bodyHtml += `</tr>`;
                 });
                 bodyHtml += `<tr class="bg-slate-300 h-1"><td colspan="${checkpoints.length + 4}"></td></tr>`;
             }
             body.innerHTML = bodyHtml;
 
-            // Sync States from Firebase
+            window.checkAllRow = (cId, day) => {
+                const updates = {};
+                checkpoints.forEach(p => updates[`data/${dateInput.value}/checks/${cId}/${p.id}/${day}`] = "ok");
+                update(ref(db), updates);
+            };
+
             onValue(ref(db, `data/${dateInput.value}`), (snap) => {
                 const data = snap.val() || {};
                 document.querySelectorAll('.state-btn').forEach(btn => {
@@ -289,6 +264,48 @@
             const query = document.getElementById('adminCamSearch').value.toLowerCase();
             document.getElementById('camera-list').innerHTML = Object.entries(cameras).filter(([id, loc]) => id.toLowerCase().includes(query) || loc.toLowerCase().includes(query)).map(([id, loc]) => `<li class="flex justify-between items-center p-3 bg-white shadow-sm rounded-lg border text-xs"><span><b>${id}</b>: ${loc}</span><button onclick="deleteCamera('${id}')" class="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">DELETE</button></li>`).join('');
             document.getElementById('points-list').innerHTML = checkpoints.map(p => `<li class="flex justify-between items-center p-3 bg-white shadow-sm rounded-lg border text-xs"><span>${p.val}</span><button onclick="deletePoint('${p.id}')" class="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">DELETE</button></li>`).join('');
+        };
+
+        // --- NEW EXCEL EXPORT LOGIC ---
+        window.exportToExcel = async () => {
+            const dateKey = dateInput.value;
+            const snapshot = await get(ref(db, `data/${dateKey}`));
+            const data = snapshot.val() || {};
+            
+            let excelData = [];
+
+            // Define Headers
+            const headers = ["Date", "Asset ID", "Location", ...checkpoints.map(p => p.val), "Camera Remark", "Daily Remark"];
+            excelData.push(headers);
+
+            for (let d = 1; d <= 31; d++) {
+                Object.entries(cameras).forEach(([camId, loc], idx) => {
+                    const row = [];
+                    row.push(d); // Date
+                    row.push(camId); // Asset ID
+                    row.push(loc); // Location
+
+                    // Checkpoints
+                    checkpoints.forEach(p => {
+                        const status = data.checks?.[camId]?.[p.id]?.[d] || "";
+                        row.push(status === "ok" ? "OK" : status === "fail" ? "FAIL" : "-");
+                    });
+
+                    // Remarks
+                    row.push(data.remarks?.[`${camId}-${d}`] || ""); // Specific Cam Remark
+                    row.push(idx === 0 ? (data.remarks?.[`day-${d}`] || "") : ""); // Daily Remark (only on first cam of the day)
+
+                    excelData.push(row);
+                });
+            }
+
+            // Create Worksheet
+            const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "CCTV Audit");
+
+            // Save File
+            XLSX.writeFile(workbook, `CCTV_Audit_${dateKey}.xlsx`);
         };
     </script>
 </body>
